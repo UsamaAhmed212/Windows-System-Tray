@@ -1,0 +1,6 @@
+#include "resource.h"
+
+IDI_MYICON ICON "bangla_keyboard.ico"
+
+IDI_keyboard ICON "keyboard.ico"
+IDI_bangla_keyboard ICON "bangla_keyboard.ico"
