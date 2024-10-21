@@ -4,5 +4,3 @@
 #define IDI_bangla_keyboard 102 // ID for bangla_keyboard.ico
 
 #define IDB_EXIT_BUTTON 103  // Bitmap ID for exit button
-
-#define IDB_keyboard 104  // Bitmap ID for keyboard button

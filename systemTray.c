@@ -10,6 +10,14 @@ HICON banglaIcon;      // Bangla keyboard icon
 HBITMAP exitBitmap;    // Bitmap for the exit menu item
 
 
+// Enum for menu item identifiers
+enum MenuItems {
+    ITEM_OPEN_1, // Automatically assigned value 0
+    ITEM_OPEN_2, // Automatically assigned value 1
+    ITEM_EXIT    // Automatically assigned value 2
+};
+
+
 // Function to toggle the tray icon between two states
 void ToggleIcon() {
     HINSTANCE hInstance = GetModuleHandle(NULL); // Get the handle of the current module
@@ -31,28 +39,29 @@ HMENU CreateContextMenu() {
     HMENU hMenu = CreatePopupMenu(); // Create a new popup menu
 
     // Append menu items with identifiers and text
-    AppendMenu(hMenu, MF_STRING, 1, "Open Item 1"); // Item 1
-    AppendMenu(hMenu, MF_STRING, 2, "Open Item 2"); // Item 2
+    AppendMenu(hMenu, MF_STRING, ITEM_OPEN_1, "Open Item 1"); // Item 1
+    AppendMenu(hMenu, MF_STRING, ITEM_OPEN_2, "Open Item 2"); // Item 2
     AppendMenu(hMenu, MF_SEPARATOR, 0, NULL); // Separator line
-    AppendMenu(hMenu, MF_STRING, 3, "Exit"); // Exit item
+    AppendMenu(hMenu, MF_STRING, ITEM_EXIT, "Exit"); // Exit item
 
     // Set up menu item information for icons
     MENUITEMINFO mii = { 0 }; // Initialize MENUITEMINFO structure
+    // MENUITEMINFO mii;
     mii.cbSize = sizeof(MENUITEMINFO);
     mii.fMask = MIIM_BITMAP | MIIM_ID; // Specify bitmap and ID
 
     // Set the exit bitmap for menu items
-    mii.wID = 1;  // ID for Open Item 1
+    mii.wID = ITEM_OPEN_1;  // ID for Open Item 1
     mii.hbmpItem = exitBitmap; // Set the bitmap for Item 1
-    SetMenuItemInfo(hMenu, 1, FALSE, &mii);
+    SetMenuItemInfo(hMenu, ITEM_OPEN_1, FALSE, &mii);
 
-    mii.wID = 2;  // ID for Open Item 2
+    mii.wID = ITEM_OPEN_2;  // ID for Open Item 2
     mii.hbmpItem = exitBitmap; // Set the bitmap for Item 2
-    SetMenuItemInfo(hMenu, 2, FALSE, &mii);
+    SetMenuItemInfo(hMenu, ITEM_OPEN_2, FALSE, &mii);
 
-    mii.wID = 3;  // ID for the Exit item
+    mii.wID = ITEM_EXIT;  // ID for the Exit item
     mii.hbmpItem = exitBitmap; // Set the bitmap for the Exit item
-    SetMenuItemInfo(hMenu, 3, FALSE, &mii);
+    SetMenuItemInfo(hMenu, ITEM_EXIT, FALSE, &mii);
 
     return hMenu; // Return the created menu
 }
@@ -78,13 +87,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_COMMAND:
             // Handle menu item commands
             switch (LOWORD(wParam)) {
-                case 1:
+                case ITEM_OPEN_1:
                     MessageBox(NULL, "You clicked Open Item 1!", "Info", MB_OK); // Info message for Item 1
                     break;
-                case 2:
+                case ITEM_OPEN_2:
                     MessageBox(NULL, "You clicked Open Item 2!", "Info", MB_OK); // Info message for Item 2
                     break;
-                case 3:
+                case ITEM_EXIT:
                     Shell_NotifyIcon(NIM_DELETE, &nid); // Remove the icon from the tray
                     PostQuitMessage(0); // Quit the application
                     break;
@@ -104,26 +113,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 int main() {
     HINSTANCE hInstance = GetModuleHandle(NULL); // Get the instance handle of the current application
-    
+
     // Load icons for the tray application
     currentIcon = (HICON)LoadIcon(hInstance, MAKEINTRESOURCE(IDI_keyboard));
     banglaIcon = (HICON)LoadIcon(hInstance, MAKEINTRESOURCE(IDI_bangla_keyboard));
     
     // Load bitmap for exit menu item
     exitBitmap = (HBITMAP)LoadImage(hInstance, MAKEINTRESOURCE(IDB_EXIT_BUTTON), IMAGE_BITMAP, 15, 15, LR_LOADTRANSPARENT);
-  
+
     // Register window class
     WNDCLASS wc = {0}; // Initialize WNDCLASS structure
     wc.lpfnWndProc = WindowProc; // Set window procedure
     wc.hInstance = hInstance; // Set application instance
     wc.lpszClassName = "TrayApp"; // Set class name
     RegisterClass(&wc); // Register the window class
-    
+
     // Create the application window
     HWND hwnd = CreateWindow("TrayApp", "Tray Application", WS_OVERLAPPEDWINDOW,
                              CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                              NULL, NULL, hInstance, NULL);
-    
+
     // Set up notification icon data
     nid.cbSize = sizeof(NOTIFYICONDATA); // Set size of NOTIFYICONDATA
     nid.hWnd = hwnd; // Set the window handle
@@ -132,7 +141,7 @@ int main() {
     nid.hIcon = currentIcon; // Set the current icon
     nid.uCallbackMessage = WM_APP; // Set callback message
     strcpy(nid.szTip, "Keyboard Application"); // Set tooltip text
-    
+
     Shell_NotifyIcon(NIM_ADD, &nid); // Add the icon to the system tray
     ShowWindow(hwnd, SW_HIDE); // Hide the main window
 

@@ -6,5 +6,3 @@ IDI_keyboard ICON "keyboard.ico"
 IDI_bangla_keyboard ICON "bangla_keyboard.ico"
 
 IDB_EXIT_BUTTON BITMAP "exit.bmp"
-
-IDB_keyboard BITMAP "keyboard.bmp"
