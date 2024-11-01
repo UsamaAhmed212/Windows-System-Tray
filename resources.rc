@@ -1,3 +1,4 @@
+// resources.rc
 #include "resource.h"
 
 IDI_MYICON ICON "bangla_keyboard.ico"
@@ -6,3 +7,5 @@ IDI_keyboard ICON "keyboard.ico"
 IDI_bangla_keyboard ICON "bangla_keyboard.ico"
 
 IDB_EXIT_BUTTON BITMAP "exit.bmp"
+
+IDI_EXIT_ICON ICON "menu_icon/exit.ico" // Load exit icon
