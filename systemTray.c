@@ -17,7 +17,7 @@ enum MenuItems {
     ITEM_EXIT    // Automatically assigned value 2
 };
 
-// Function to convert HICON to HBITMAP with specified width and height
+// Function to convert HICON to HBITMAP with specified width and height and remove the background
 HBITMAP IconToBitmap(HICON hIcon, int width, int height) {
     // Create a compatible DC
     HDC hDC = GetDC(NULL);
@@ -27,36 +27,50 @@ HBITMAP IconToBitmap(HICON hIcon, int width, int height) {
     HBITMAP hBitmap = CreateCompatibleBitmap(hDC, width, height);
     SelectObject(hMemDC, hBitmap);
 
-    // Set the stretch mode to HALFTONE for better quality
-    SetStretchBltMode(hMemDC, HALFTONE);
-
-    // Clear the memory DC with a transparent background (optional)
-    FillRect(hMemDC, &(RECT){0, 0, width, height}, (HBRUSH)(COLOR_WINDOW + 1)); // Fill with white or transparent
-
     // Get the original icon dimensions
     ICONINFO iconInfo;
     GetIconInfo(hIcon, &iconInfo);
     int originalWidth = iconInfo.xHotspot * 2; // width
     int originalHeight = iconInfo.yHotspot * 2; // height
-    DeleteObject(iconInfo.hbmMask); // Clean up
 
-    // Calculate the aspect ratio
-    float aspectRatio = (float)originalWidth / (float)originalHeight;
-    int newWidth, newHeight;
+    // Create a mask DC for the icon
+    HDC hMaskDC = CreateCompatibleDC(hDC);
+    HBITMAP hMaskBitmap = CreateBitmap(originalWidth, originalHeight, 1, 1, NULL);
+    SelectObject(hMaskDC, hMaskBitmap);
 
-    // Maintain aspect ratio
-    if (width / aspectRatio > height) {
-        newHeight = height;
-        newWidth = (int)(height * aspectRatio);
-    } else {
-        newWidth = width;
-        newHeight = (int)(width / aspectRatio);
+    // Draw the icon's mask
+    DrawIcon(hMaskDC, 0, 0, hIcon);
+
+    // Create a bitmap to hold the icon's color data
+    HBITMAP hColorBitmap = CreateCompatibleBitmap(hDC, originalWidth, originalHeight);
+    HDC hColorDC = CreateCompatibleDC(hDC);
+    SelectObject(hColorDC, hColorBitmap);
+
+    // Draw the icon to get the color data
+    DrawIcon(hColorDC, 0, 0, hIcon);
+
+    // Combine the mask and color bitmaps into the final bitmap with transparency
+    for (int y = 0; y < originalHeight; y++) {
+        for (int x = 0; x < originalWidth; x++) {
+            COLORREF color = GetPixel(hColorDC, x, y);
+            COLORREF maskColor = GetPixel(hMaskDC, x, y);
+
+            // If the mask color is not white, retain the color; otherwise, make it transparent
+            if (maskColor == RGB(255, 255, 255)) {
+                SetPixel(hMemDC, x, y, RGB(255, 255, 255)); // Set to white (or use a color key)
+            } else {
+                SetPixel(hMemDC, x, y, color);
+            }
+        }
     }
 
-    // Stretch the icon to the new size
-    DrawIconEx(hMemDC, (width - newWidth) / 2, (height - newHeight) / 2, hIcon, newWidth, newHeight, 0, NULL, DI_NORMAL);
-
     // Cleanup
+    DeleteDC(hColorDC);
+    DeleteObject(hColorBitmap);
+    DeleteDC(hMaskDC);
+    DeleteObject(hMaskBitmap);
+    DeleteObject(iconInfo.hbmColor); // Clean up the color bitmap
+    DeleteObject(iconInfo.hbmMask);   // Clean up the mask bitmap
     DeleteDC(hMemDC);
     ReleaseDC(NULL, hDC);
 
@@ -96,7 +110,7 @@ HMENU CreateContextMenu() {
 
     // Set the bitmap for the Exit item (16x16 size)
     mii.wID = ITEM_EXIT;  // ID for the Exit item
-    mii.hbmpItem = IconToBitmap(exitIcon, 16, 16); // Convert exitIcon to HBITMAP with size 16x16
+    mii.hbmpItem = IconToBitmap(exitIcon, 32, 32); // Convert exitIcon to HBITMAP with size 16x16
     SetMenuItemInfo(hMenu, ITEM_EXIT, FALSE, &mii); // Set the menu item info for Exit item
 
     // Set the bitmap for Item 1 (16x16 size)
